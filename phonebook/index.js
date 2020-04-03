@@ -1,6 +1,7 @@
 const express = require('express')
 
 const app = express()
+app.use(express.json())
 
 //TODO set list of numbers
 let persons = [
@@ -67,6 +68,37 @@ app.delete('/api/persons/:id', (req, res) => {
   res.status(204).end()
 })
 
+//TODO: implement uniqe id
+const generateUniqeId = () => {
+  const generateRandomId = () => Math.floor(Math.random() * Math.floor(999))
+  let id = generateRandomId()
+  while( persons.find(p => p.id === id) ) {
+    id = generateRandomId()
+  }
+  return id
+}
+
+//TODO: implement create
+app.post('/api/persons/', (req, res) => {
+  //generate uniqe id
+  let id = generateUniqeId()
+  //rest of the person properities in request body
+  console.log(req.body)
+  console.log(req)
+  if(req.body){
+    const newPerson = {
+      name: req.body.name,
+      number: req.body.number,
+      id: id
+    }
+    persons = persons.concat(newPerson)
+    res.json(newPerson)
+  } else {
+    res.status(400).json({
+      error: 'person details (request body) missing'
+    })
+  }
+})
 
 const PORT = 3000
 app.listen(PORT)
