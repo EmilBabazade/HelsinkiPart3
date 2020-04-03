@@ -68,7 +68,7 @@ app.delete('/api/persons/:id', (req, res) => {
   res.status(204).end()
 })
 
-//TODO: implement uniqe id
+//TODO implement uniqe id
 const generateUniqeId = () => {
   const generateRandomId = () => Math.floor(Math.random() * Math.floor(999))
   let id = generateRandomId()
@@ -78,7 +78,23 @@ const generateUniqeId = () => {
   return id
 }
 
-//TODO: implement create
+//TODO implement new person validation
+const validateNewPerson = (person) => {
+  const nameIsNotUniqe = persons.find(p => 
+    p.name.toLowerCase().trim() === person.name.toLowerCase().trim()
+  )
+  const numberIsNotUniqe = persons.find(p => p.number === person.number )
+
+  if(nameIsNotUniqe){
+    throw `name ${person.name} already in phonebook`
+  } 
+
+  if(numberIsNotUniqe){
+    throw `number ${person.number} already in phonebook`
+  }
+}
+
+//TODO implement create
 app.post('/api/persons/', (req, res) => {
   //generate uniqe id
   let id = generateUniqeId()
@@ -90,6 +106,11 @@ app.post('/api/persons/', (req, res) => {
       name: req.body.name,
       number: req.body.number,
       id: id
+    }
+    try{
+      validateNewPerson(newPerson)
+    } catch(error) {
+      res.status(400).json({error})
     }
     persons = persons.concat(newPerson)
     res.json(newPerson)
