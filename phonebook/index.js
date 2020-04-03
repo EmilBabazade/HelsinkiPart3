@@ -3,7 +3,7 @@ const express = require('express')
 const app = express()
 
 //TODO set list of numbers
-const persons = [
+let persons = [
     {
       "name": "kamil",
       "number": "98",
@@ -59,6 +59,14 @@ app.get('/api/persons/:id', (req, res) => {
         })
     }
 })
+
+//TODO implement delete one
+app.delete('/api/persons/:id', (req, res) => {
+  const id = Number(req.params.id)
+  persons = persons.filter(n => n.id !== id)
+  res.status(204).end()
+})
+
 
 const PORT = 3000
 app.listen(PORT)
