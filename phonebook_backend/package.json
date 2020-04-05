@@ -10,7 +10,7 @@
     "build:ui": "rm -rf build && cd ../phonebook_frontend && npm run build --prod && cp -r build ../phonebook_backend",
     "deploy": "git add . && git commit -m deploy && git push heroku master",
     "deploy:full": "npm run build:ui && git add . && git commit -m build:ui && npm run deploy",
-    "heroku:logs": "heroku logs --tail" 
+    "heroku:logs": "heroku logs --tail"
   },
   "author": "Emil Babazade",
   "license": "ISC",
@@ -20,6 +20,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.17.1",
+    "mongoose": "^5.9.7",
     "morgan": "^1.10.0"
   }
 }
