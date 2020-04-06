@@ -1,6 +1,8 @@
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
+const Person = require('./models/person')
 
 const app = express()
 app.use(cors())
@@ -13,39 +15,16 @@ morgan.token('body', (req, res) => JSON.stringify(req.body) )
 
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
-
-//TODO set list of numbers
-let persons = [
-    {
-      "name": "kamil",
-      "number": "98",
-      "id": 3
-    },
-    {
-      "name": "enef",
-      "number": "12",
-      "id": 4
-    },
-    {
-      "name": "emil",
-      "number": "123",
-      "id": 5
-    },
-    {
-      "name": "gud",
-      "number": "1234",
-      "id": 6
-    },
-    {
-      "name": "fefe",
-      "number": "01231",
-      "id": 7
-    }
-]
-
 //TODO implement get all
 app.get('/api/persons', (req, res) => {
-    res.json(persons)
+    Person
+      .find()
+      .then(persons => {
+        res.json(persons.map(person => person.toJSON()))
+      })
+      .catch(err => res.status(404).json({
+        error: `error when fetching all persons: ${err}`
+      }))
 })
 
 //TODO implement info page
@@ -132,6 +111,6 @@ app.post('/api/persons/', (req, res) => {
   }
 })
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT)
 console.log(`server running on port ${PORT}`)
