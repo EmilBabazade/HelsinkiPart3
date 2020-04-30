@@ -3,11 +3,14 @@ const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
 const Person = require('./models/person')
+const mongoose = require('mongoose')
 
 const app = express()
 app.use(cors())
 app.use(express.static('build'))
 app.use(express.json())
+
+mongoose.set('useFindAndModify', false)
 
 //TODO: implement morgan middleware for logging
 
@@ -29,33 +32,39 @@ app.get('/api/persons', (req, res) => {
 
 //TODO implement info page
 app.get('/info', (req, res) => {
-    const numOfPersons = persons.length
-    const now = new Date()
-    res.send(`
-        <p>Phonebook has info for ${numOfPersons} </p>
-        <p>${now}</p>
-    `)
+    Person.find().then(results => {
+      const personCount = results.length
+      const now = new Date()
+      res.send(`
+          <p>Phonebook has info for ${personCount} </p>
+          <p>${now}</p>
+      `)
+    })
+    
 })
 
-app.get('/api/persons/:id', (req, res) => {
-//TODO find person with id
-    const id = Number(req.params.id)
-    const person = persons.find(n => n.id === id)
-    if(person) {
-        res.json(person)
-    } else {
-//TODO if nothing send back 404 with error message
-        res.status(404).json({
-            error: `person with id ${id} does not exist`
-        })
-    }
+// get one person
+app.get('/api/persons/:id', (req, res, next) => {
+  Person.findById(req.params.id)
+    .then(person => {
+      if(person){
+        res.json(person.toJSON())
+      }
+      res.status(404).end()
+    })
+    .catch(err => {
+      // console.log(`error is ${err} ALSO ${typeof err}`)
+      next(err)
+    })
 })
 
 //TODO implement delete one
 app.delete('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id)
-  persons = persons.filter(n => n.id !== id)
-  res.status(204).end()
+  Person.findByIdAndDelete(req.params.id)
+    .then(deletedPerson => {
+      console.log(`deleted: ${deletedPerson}`)
+      res.status(204).end()
+    })
 })
 
 //TODO implement new person validation
@@ -73,6 +82,22 @@ const validateNewPerson = (person) => {
     throw `number ${person.number} already in phonebook`
   }
 }
+
+// update a person
+app.put('/api/persons/:id', (req, res, next) => {
+  const bodyContent = req.body
+
+  const person = {
+    name: bodyContent.name,
+    number: bodyContent.number
+  }
+  
+  Person.findByIdAndUpdate(req.params.id, person, {new: true})
+    .then(updatedPerson => {
+      res.json(updatedPerson.toJSON())
+    })
+    .catch(err => next(err))
+})
 
 //TODO implement create
 app.post('/api/persons/', (req, res) => {
@@ -92,6 +117,26 @@ app.post('/api/persons/', (req, res) => {
   }
 })
 
-const PORT = process.env.PORT
+const unknownEndpoint = (req, res) => {
+  res.status(404).json({
+    error: 'unknown endpoint'
+  })
+}
+
+app.use(unknownEndpoint)
+
+const errorHandler = (err, req, res, next) => {
+  console.log(err)
+
+  if(err.name === 'CastError' && err.path === '_id'){
+    return res.status(400).send({ err: 'malformatted id' })
+  }
+
+  next(err)
+}
+
+app.use(errorHandler)
+
+const PORT = process.env.PORT || 3001
 app.listen(PORT)
 console.log(`server running on port ${PORT}`)
