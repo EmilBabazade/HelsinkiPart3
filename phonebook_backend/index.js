@@ -5,6 +5,12 @@ const cors = require('cors')
 const Person = require('./models/person')
 const mongoose = require('mongoose')
 
+//to get rid of mongoose deprication warnings 
+mongoose.set('useNewUrlParser', true);
+mongoose.set('useFindAndModify', false);
+mongoose.set('useCreateIndex', true);
+mongoose.set('useUnifiedTopology', true);
+
 const app = express()
 app.use(cors())
 app.use(express.static('build'))
@@ -100,21 +106,17 @@ app.put('/api/persons/:id', (req, res, next) => {
 })
 
 //TODO implement create
-app.post('/api/persons/', (req, res) => {
-  if(req.body){
-    const newPerson = new Person({
-      name: req.body.name,
-      number: req.body.number
-    })
-    newPerson
-      .save()
-      .then(savedPerson => res.json(savedPerson.toJSON()))
-      .catch(err => console.log(`error when creating new person: ${err}`))
-  } else {
-    res.status(400).json({
-      error: 'person details (request body) missing'
-    })
-  }
+app.post('/api/persons/', (req, res, next) => {
+  const body = req.body
+  const newPerson = new Person({
+    name: body.name,
+    number: body.number
+  })
+  newPerson
+    .save()
+    .then(savedPerson => savedPerson.toJSON())
+    .then(savedAndFormattedPerson => res.json(savedAndFormattedPerson))
+    .catch(err => next(err))
 })
 
 const unknownEndpoint = (req, res) => {
@@ -128,8 +130,11 @@ app.use(unknownEndpoint)
 const errorHandler = (err, req, res, next) => {
   console.log(err)
 
-  if(err.name === 'CastError' && err.path === '_id'){
-    return res.status(400).send({ err: 'malformatted id' })
+  // if(err.name === 'CastError' && err.path === '_id'){
+  if(err.name === 'CastError'){
+    return res.status(400).send({ error: 'malformatted id' })
+  } else if(err.name === 'ValidationError'){
+    return res.status(400).send({ error: err.message})
   }
 
   next(err)
