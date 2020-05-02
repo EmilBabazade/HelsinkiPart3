@@ -29,15 +29,13 @@ const App = () => {
 
   // this is just a helper function
   const validatePerson = ( newPerson, persons ) => {
-    // check if empty
-    if( newPerson.name && !isNaN( !newPerson.number ) ){
     // check if name or number already exists
     var nameIsInPersons = persons.some( person => person.name === newPerson.name );
     var phonenNumberIsInPersons = persons.some( person => person.number === newPerson.number );
     if( nameIsInPersons ){
         throw {
-        phoneBookException: true,
-        userText: `${ newPerson.name } is already in phone book`
+          phoneBookException: true,
+          userText: `${ newPerson.name } is already in phone book`
         }
     } else if( phonenNumberIsInPersons ) {
         var originalOwner = persons.reduce( ( name, person ) => {
@@ -51,14 +49,6 @@ const App = () => {
             userText: `Number ${ newPerson.number } belongs to ${ originalOwner }`
         }
     }
-    // update the states
-    } else {
-        throw {
-            phoneBookException: true,
-            userText: 'None of the fields can be empty!' 
-        } 
-    }
-    
   }
 
   const addPerson = ( event ) => {
@@ -79,7 +69,10 @@ const App = () => {
             setTimeout(() => {setNotification(null)}, 5000)
           })
           .catch(error => {
-            console.log(`there was an error when creating person: ${error}`)
+            const errMsg = error.response.data.error
+            setNotification(`${errMsg}`)
+            console.log(errMsg)
+            setTimeout(() => {setNotification(null)}, 5000)
           })
     } catch (error) {
         if( error.phoneBookException ) { // is a custom exception made in this project
