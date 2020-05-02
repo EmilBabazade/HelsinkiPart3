@@ -118,7 +118,7 @@ app.post('/api/persons/', (req, res, next) => {
     .then(savedAndFormattedPerson => res.json(savedAndFormattedPerson))
     .catch(err => next(err))
 })
-
+//for unknown links
 const unknownEndpoint = (req, res) => {
   res.status(404).json({
     error: 'unknown endpoint'
